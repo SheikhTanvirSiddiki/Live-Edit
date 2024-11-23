@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live JSON Editor</title>
+  <title>Live GitHub JSON Editor</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -47,7 +47,7 @@
 </head>
 <body>
 
-  <h1>Live JSON Editor</h1>
+  <h1>Live JSON Editor (GitHub)</h1>
   
   <div class="form-group">
     <label for="key">Key:</label>
@@ -65,46 +65,51 @@
   <pre id="json-output"></pre>
 
   <script>
-    // Initial JSON data (this would normally be fetched from GitHub or a server)
-    let jsonData = {
-      "name": "Example",
-      "version": "1.0",
-      "author": "Your Name"
-    };
+    let jsonData = {};  // Initialize the JSON object
 
-    // Function to display JSON data
+    // Fetch the JSON from GitHub and display it
+    function fetchJson() {
+      fetch('https://raw.githubusercontent.com/SheikhTanvirSiddiki/Live-Edit/main/data.json')
+        .then(response => response.json())
+        .then(data => {
+          jsonData = data;
+          displayJson();
+        })
+        .catch(error => console.error('Error fetching JSON:', error));
+    }
+
+    // Display the current JSON data
     function displayJson() {
       document.getElementById("json-output").textContent = JSON.stringify(jsonData, null, 2);
     }
 
-    // Function to update JSON data
+    // Update JSON data and push to GitHub
     function updateJson() {
       const key = document.getElementById("key").value;
       const value = document.getElementById("value").value;
       
       if (key && value) {
-        jsonData[key] = value;  // Update the JSON object with new key-value pair
+        jsonData[key] = value;  // Update the JSON object with the new key-value pair
         displayJson();  // Update the displayed JSON
 
-        // Call GitHub API to save the updated JSON (You need to set up authentication for this)
+        // Commit the changes to GitHub
         commitToGitHub();
       }
     }
 
-    // Function to commit the updated JSON to GitHub
+    // Commit the changes back to GitHub using GitHub API
     function commitToGitHub() {
       const jsonContent = btoa(JSON.stringify(jsonData)); // Base64 encode the JSON content
 
-      // Get the current SHA of the JSON file
       fetch('https://api.github.com/repos/SheikhTanvirSiddiki/Live-Edit/contents/data.json')
         .then(response => response.json())
         .then(data => {
-          const sha = data.sha; // Get the file's SHA
-          // Use the SHA to update the file on GitHub
+          const sha = data.sha;  // Get the file's SHA (needed for updating)
+
           fetch('https://api.github.com/repos/SheikhTanvirSiddiki/Live-Edit/contents/data.json', {
             method: 'PUT',
             headers: {
-              'Authorization': 'Bearer YOUR_GITHUB_TOKEN',
+              'Authorization': 'Bearer YOUR_GITHUB_TOKEN',  // Replace this with your new token
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -115,12 +120,13 @@
           })
           .then(response => response.json())
           .then(data => console.log('File updated:', data))
-          .catch(error => console.error('Error:', error));
-        });
+          .catch(error => console.error('Error updating file:', error));
+        })
+        .catch(error => console.error('Error fetching file info:', error));
     }
 
-    // Initial display of JSON data
-    displayJson();
+    // Initialize the page by fetching the JSON data
+    fetchJson();
   </script>
   
 </body>
