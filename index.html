@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live JSON Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      font-weight: bold;
+    }
+    .form-group input {
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 5px;
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    .output {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Live JSON Editor</h1>
+  
+  <div class="form-group">
+    <label for="key">Key:</label>
+    <input type="text" id="key" placeholder="Enter key">
+  </div>
+  
+  <div class="form-group">
+    <label for="value">Value:</label>
+    <input type="text" id="value" placeholder="Enter value">
+  </div>
+  
+  <button class="btn" onclick="updateJson()">Update JSON</button>
+  
+  <h3>Current JSON:</h3>
+  <pre id="json-output"></pre>
+
+  <script>
+    // Initial JSON data (this would normally be fetched from GitHub or a server)
+    let jsonData = {
+      "name": "Example",
+      "version": "1.0",
+      "author": "Your Name"
+    };
+
+    // Function to display JSON data
+    function displayJson() {
+      document.getElementById("json-output").textContent = JSON.stringify(jsonData, null, 2);
+    }
+
+    // Function to update JSON data
+    function updateJson() {
+      const key = document.getElementById("key").value;
+      const value = document.getElementById("value").value;
+      
+      if (key && value) {
+        jsonData[key] = value;  // Update the JSON object with new key-value pair
+        displayJson();  // Update the displayed JSON
+
+        // Call GitHub API to save the updated JSON (You need to set up authentication for this)
+        commitToGitHub();
+      }
+    }
+
+    // Function to commit the updated JSON to GitHub
+    function commitToGitHub() {
+      const jsonContent = btoa(JSON.stringify(jsonData)); // Base64 encode the JSON content
+
+      // Get the current SHA of the JSON file
+      fetch('https://api.github.com/repos/SheikhTanvirSiddiki/Live-Edit/contents/data.json')
+        .then(response => response.json())
+        .then(data => {
+          const sha = data.sha; // Get the file's SHA
+          // Use the SHA to update the file on GitHub
+          fetch('https://api.github.com/repos/SheikhTanvirSiddiki/Live-Edit/contents/data.json', {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'Bearer YOUR_GITHUB_TOKEN',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: 'Update JSON file from Live Edit',
+              content: jsonContent,
+              sha: sha
+            })
+          })
+          .then(response => response.json())
+          .then(data => console.log('File updated:', data))
+          .catch(error => console.error('Error:', error));
+        });
+    }
+
+    // Initial display of JSON data
+    displayJson();
+  </script>
+  
+</body>
+</html>
